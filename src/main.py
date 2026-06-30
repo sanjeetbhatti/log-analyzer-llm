@@ -1,6 +1,8 @@
 import argparse
+import json
 from pathlib import Path
 
+from classifier import classify_issue
 from parser import parse_log
 
 
@@ -26,10 +28,26 @@ def _analyze(log_file: Path, output_dir: Path):
         print(f"Error: output dir could be found: {output_dir}")
         return
 
-    print(f"analyzing: {log_file}")
+    print(f"Loading log file: {log_file}")
     log_text = log_file.read_text()
+
+    print("Parsing log...")
     parsed = parse_log(log_text)
-    print(parsed)
+
+    print("Classifying issue...")
+    issue = classify_issue(parsed)
+
+    # llm step here
+
+    result = {
+        'log_path': str(log_file.stem),
+        'issue_type': issue,
+        'parsed_log': parsed,
+    }
+
+    print("Writing report...")
+    report_path = output_dir / f"{result['log_path']}_report.json"
+    report_path.write_text(json.dumps(result, indent=2))
 
     print("Analysis complete")
 
