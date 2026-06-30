@@ -1,6 +1,8 @@
 import argparse
 from pathlib import Path
 
+from parser import parse_log
+
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Log analysis assistant")
@@ -26,7 +28,8 @@ def _analyze(log_file: Path, output_dir: Path):
 
     print(f"analyzing: {log_file}")
     log_text = log_file.read_text()
-    print(log_text)
+    parsed = parse_log(log_text)
+    print(parsed)
 
     print("Analysis complete")
 
