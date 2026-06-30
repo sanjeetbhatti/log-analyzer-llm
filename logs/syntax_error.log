@@ -1,0 +1,4 @@
+File "/app/utils/validator.py", line 22
+    if user.is_active
+                     ^
+SyntaxError: expected ':'
