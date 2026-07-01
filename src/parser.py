@@ -1,10 +1,12 @@
 import re
 
+from models import ParsedLog
+
 
 ERROR_REGEXP = re.compile(r"\b\w*error\w*\b", re.IGNORECASE)
 
 
-def parse_log(log_text: str) -> list[str]:
+def parse_log(log_text: str) -> ParsedLog:
     parsed_data: list[str] = []
 
     for line in log_text.splitlines():
@@ -15,4 +17,4 @@ def parse_log(log_text: str) -> list[str]:
         if ERROR_REGEXP.search(ln):
             parsed_data.append(ln)
 
-    return parsed_data
+    return ParsedLog(errors=parsed_data)

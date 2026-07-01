@@ -1,5 +1,6 @@
 import argparse
 import json
+from dataclasses import asdict
 from pathlib import Path
 
 from classifier import classify_issue
@@ -42,7 +43,7 @@ def _analyze(log_file: Path, output_dir: Path):
     result = {
         'log_path': str(log_file.stem),
         'issue_type': issue,
-        'parsed_log': parsed,
+        'parsed_log': asdict(parsed),
     }
 
     print("Writing report...")
