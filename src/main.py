@@ -4,6 +4,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from classifier import classify_issue
+from llm import generate_summary
 from parser import parse_log
 
 
@@ -38,12 +39,25 @@ def _analyze(log_file: Path, output_dir: Path):
     print("Classifying issue...")
     issue = classify_issue(parsed)
 
-    # llm step here
+    print("Generating summary...")
+    prompt = (
+        "You are an experienced software debugging assistant.\n\n"
+        f"Issue Type:\n{issue}\n\n"
+        f"Errors:{"\n".join(l for l in parsed.errors)}\n"
+        "Generate:\n"
+        "1. Summary\n"
+        "2. Likely cause\n"
+        "3. Debugging steps\n"
+        "4. Suggested next actions\n"
+        "Maximum 200 words."
+    )
+    summary = generate_summary(prompt)
 
     result = {
         'log_path': str(log_file.stem),
         'issue_type': issue,
         'parsed_log': asdict(parsed),
+        'summary': summary
     }
 
     print("Writing report...")

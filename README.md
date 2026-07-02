@@ -1,6 +1,6 @@
 # Log Analysis assistant
 
-Python cli app that analyzes logs and write reports.
+Python cli app that uses llm to analyze logs and write reports.
 
 
 # Steps to run:
@@ -9,7 +9,22 @@ Python cli app that analyzes logs and write reports.
     python3 -m venv .venv
     source .venv/bin/activate
     ```
-2. See help:
+2. Install requirements
     ```
-    python src/main.py -h
+    pip install -r requirements.txt
     ```
+3. Create a .env file and add:
+    ```
+    LLM_BASE_URL=
+    LLM_API_KEY=
+    LLM_MODEL=
+    ```
+4. Run the app
+    ```
+    python src/main.py analyze <log file>
+    ```
+
+See help:
+```
+python src/main.py -h
+```
