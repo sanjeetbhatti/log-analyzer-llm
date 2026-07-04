@@ -1,5 +1,5 @@
 import argparse
-import json
+import sys
 
 from dataclasses import asdict
 from pathlib import Path
@@ -14,7 +14,7 @@ from parser import parse_log
 from report import write_md_report, write_json_report
 
 
-PROMPT_DIR = Path("prompts")
+PROMPT_DIR = Path(__file__).parent.parent / "prompts"
 
 
 def load_prompt_template(name: str) -> str:
@@ -44,10 +44,6 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 def _analyze(log_file: Path, output_dir: Path, no_llm: bool, format: str) -> int:
-    if not log_file.exists() or not log_file.is_file():
-        print(f"Error: log file not found: {log_file}")
-        return 1
-
     if not output_dir.exists():
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -104,7 +100,7 @@ def _analyze(log_file: Path, output_dir: Path, no_llm: bool, format: str) -> int
 
     print("Analysis complete")
     if md_path is not None:
-            print(f"Markdown report: {md_path}")
+        print(f"Markdown report: {md_path}")
     if json_path is not None:
         print(f"JSON report: {json_path}")
     return 0
@@ -112,17 +108,27 @@ def _analyze(log_file: Path, output_dir: Path, no_llm: bool, format: str) -> int
 def main() -> int:
     args = _parse_args()
 
-    if not args.no_llm:
-        health = health_check()
-        if not health["healthy"]:
-            print(health["message"])
-            return 1
-
     if args.command == "analyze":
+        if not args.log_file.exists() or not args.log_file.is_file():
+            print(f"Error: log file not found: {args.log_file}")
+            return 1
+        
+        if not args.no_llm:
+            health = health_check()
+            
+            if not health["healthy"]:
+                print(health["message"])
+                print(
+                    "LLM is required for summary generation. "
+                    "Fix the LLM configuration/connection, or "
+                    "rerun with --no-llm to skip summary generation."
+                )
+                return 1
+        
         return _analyze(args.log_file, args.output_dir, args.no_llm, args.format)
 
-    return 0
-        
+    return 1
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
