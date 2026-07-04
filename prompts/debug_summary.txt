@@ -1,0 +1,15 @@
+You are an experienced software debugging assistant.
+
+Issue Type:
+$issue
+
+Errors:
+$errors
+
+Generate:
+1. Summary
+2. Likely cause
+3. Debugging steps
+4. Suggested next actions
+
+Maximum 200 words.

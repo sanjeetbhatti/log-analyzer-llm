@@ -3,12 +3,25 @@ import json
 
 from dataclasses import asdict
 from pathlib import Path
+from string import Template
 
 from openai import OpenAIError
 
 from classifier import classify_issue
 from llm import generate_summary, health_check
 from parser import parse_log
+
+
+PROMPT_DIR = Path("prompts")
+
+
+def load_prompt_template(name: str) -> str:
+    path = PROMPT_DIR / name
+
+    if not path.exists():
+        raise FileNotFoundError(f"Prompt template not found: {path}")
+
+    return path.read_text(encoding="utf-8")
 
 
 def _parse_args() -> argparse.Namespace:
@@ -48,17 +61,14 @@ def _analyze(log_file: Path, output_dir: Path, no_llm: bool) -> int:
         print(summary)
     else:
         print("Generating summary...")
-        prompt = (
-            "You are an experienced software debugging assistant.\n\n"
-            f"Issue Type:\n{issue}\n\n"
-            f"Errors:{"\n".join(l for l in parsed.errors)}\n"
-            "Generate:\n"
-            "1. Summary\n"
-            "2. Likely cause\n"
-            "3. Debugging steps\n"
-            "4. Suggested next actions\n"
-            "Maximum 200 words."
+        template = Template(
+            load_prompt_template("debug_summary.txt")
         )
+        prompt = template.substitute(
+            issue=issue,
+            errors="\n".join(parsed.errors),
+        )
+
         try:
             summary = generate_summary(prompt)
         except ValueError as err:
