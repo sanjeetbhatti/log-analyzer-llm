@@ -1,4 +1,4 @@
-from models import ParsedLog
+from .models import ParsedLog
 
 
 def classify_issue(parsed_log: ParsedLog) -> str:

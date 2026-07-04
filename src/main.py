@@ -8,11 +8,11 @@ from string import Template
 
 from openai import OpenAIError
 
-from classifier import classify_issue
-from llm import generate_summary, health_check
-from models import AnalysisResult
-from parser import parse_log
-from report import write_md_report, write_json_report
+from .classifier import classify_issue
+from .llm import generate_summary, health_check
+from .models import AnalysisResult
+from .parser import parse_log
+from .report import write_md_report, write_json_report
 
 
 PROMPT_DIR = Path(__file__).parent.parent / "prompts"

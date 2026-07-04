@@ -53,3 +53,6 @@ python src/main.py analyze log.txt --format json
 
 # Custom output directory
 python src/main.py analyze log.txt --output_dir ./output
+
+# RUn tests
+python -m pytest

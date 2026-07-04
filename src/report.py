@@ -2,7 +2,7 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
-from models import AnalysisResult
+from .models import AnalysisResult
 
 
 def write_json_report(result: AnalysisResult, output_dir: Path) -> Path:

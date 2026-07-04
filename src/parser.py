@@ -1,6 +1,6 @@
 import re
 
-from models import ParsedLog
+from .models import ParsedLog
 
 
 LOG_START_REGEXP = re.compile(
