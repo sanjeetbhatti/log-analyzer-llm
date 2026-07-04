@@ -1,7 +1,6 @@
 import argparse
 import sys
 
-from dataclasses import asdict
 from pathlib import Path
 from string import Template
 
@@ -31,9 +30,18 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Log analysis assistant")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    analyze = sub.add_parser(name="analyze", help="Analyze a log file")
+    analyze = sub.add_parser(
+        "analyze",
+        help="Analyze a log file and generate reports",
+        description="Analyze a log file using LLM to classify issues and generate summaries.",
+    )
     analyze.add_argument("log_file", type=Path, help="Path to log file")
-    analyze.add_argument("--output_dir", type=Path, default=Path("reports"), help="Report output dirctory")
+    analyze.add_argument(
+        "--output_dir", 
+        type=Path, 
+        default=Path(__file__).parent.parent / "reports",
+        help="Report output directory (default: ./reports)",
+    )
     analyze.add_argument("--no-llm", action="store_true", help="Skip LLM summary generation")
     analyze.add_argument(
         "--format",
