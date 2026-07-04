@@ -1,4 +1,31 @@
-File "/app/utils/validator.py", line 22
+2026-05-02 10:14:02,123 [INFO] bootstrap.py:45 - Starting application server v2.4.1 in production mode...
+2026-05-02 10:14:02,150 [INFO] db_pool.py:88 - Initializing connection pool (size=10)
+2026-05-02 10:14:02,300 [DEBUG] validator.py:12 - Validating incoming schema configuration...
+  File "/app/utils/validator.py", line 22
     if user.is_active
-                     ^
+                      ^
 SyntaxError: expected ':'
+
+2026-05-02 10:14:02,305 [ERROR] core.py:112 - Failed to compile validation modules during initialization.
+Traceback (most recent call last):
+  File "/app/core.py", line 105, in initialize_app
+    load_modules()
+  File "/app/core.py", line 40, in load_modules
+    import utils.validator
+  File "/app/utils/validator.py", line 22
+    if user.is_active
+                      ^
+SyntaxError: expected ':'
+
+2026-05-02 10:15:30,412 [WARNING] worker.py:204 - Background task queue heartbeat missed. Retrying connection...
+2026-05-02 10:15:35,420 [ERROR] db_pool.py:140 - DatabaseOperationalError: could not connect to server: Connection refused
+	Is the server running on host "db.internal" (10.0.4.15) and accepting
+	TCP/IP connections on port 5432?
+2026-05-02 10:16:10,889 [CRITICAL] api_client.py:55 - ExternalPaymentService timeout after 30000ms. Endpoint: POST /v1/charges
+Traceback (most recent call last):
+  File "/app/services/api_client.py", line 50, in make_request
+    response = requests.post(url, json=payload, timeout=30)
+  File "/usr/local/lib/python3.11/site-packages/requests/adapters.py", line 486, in send
+    raise ReadTimeout(e.timeout, request=response)
+requests.exceptions.ReadTimeout: HTTPSConnectionPool(host='api.internal.billing', port=443): ReadTimeout: HTTPSConnectionPool(host='api.internal.billing', port=443): ReadTimeout: ReadTimeoutError(ReadTimeoutError(HTTPConnectionPool(host='api.internal.billing', port=443): ReadTimeout: ReadTimeoutError(ReadTimeout))
+2026-05-02 10:16:11,001 [INFO] shutdown.py:12 - Graceful shutdown sequence initiated due to unhandled pipeline failure.

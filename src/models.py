@@ -8,10 +8,19 @@ class ParsedLog:
     Represents the parsed structural output extracted from a log file.
     """
     errors: list[str]
+    warnings: list[str]
 
     @property
     def num_errors(self) -> int:
         return len(self.errors)
+
+    @property
+    def num_warnings(self) -> int:
+        return len(self.warnings)
+
+    @property
+    def total_issues(self) -> int:
+        return len(self.errors) + len(self.warnings)
 
 @dataclass
 class AnalysisResult:

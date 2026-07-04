@@ -7,4 +7,6 @@ def classify_issue(parsed_log: ParsedLog) -> str:
     """
     if parsed_log.num_errors:
         return "Error"
+    elif parsed_log.num_warnings:
+        return "Warning"
     return "Unknown issue"
