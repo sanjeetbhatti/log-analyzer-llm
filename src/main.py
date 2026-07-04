@@ -1,7 +1,10 @@
 import argparse
 import json
+
 from dataclasses import asdict
 from pathlib import Path
+
+from openai import OpenAIError
 
 from classifier import classify_issue
 from llm import generate_summary, health_check
@@ -58,8 +61,11 @@ def _analyze(log_file: Path, output_dir: Path, no_llm: bool) -> int:
         )
         try:
             summary = generate_summary(prompt)
-        except Exception as err:
-            print(f"Something went wrong.\n{err}")
+        except ValueError as err:
+            print(f"Configuration error: {err}")
+            return 1
+        except OpenAIError as err:
+            print(f"LLM error: {err}")
             return 1
 
     result = {

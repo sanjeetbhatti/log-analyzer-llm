@@ -3,7 +3,7 @@ from functools import lru_cache
 from typing import TypedDict
 
 from dotenv import load_dotenv
-from openai import OpenAI
+from openai import OpenAI, OpenAIError
 
 
 load_dotenv()
@@ -50,29 +50,24 @@ def health_check() -> HealthStatus:
             "healthy": False,
             "message": f"Configuration Error: {err}",
         }
-    except Exception as err:
+    except OpenAIError as err:
         return {
             "healthy": False,
             "message": f"LLM connection failed: {err}",
         }
 
 def generate_summary(prompt: str) -> str:
-    try:
-        client, model = _connect_to_client()
-        response = client.chat.completions.create(
-            model=model,
-            temperature=0.2,
-            messages=[
-                {"role": "system", "content": "You are a concise debugging assistant."},
-                {"role": "user", "content": prompt},
-            ],
-        )
-    except ValueError as err:
-        return f"Configuration Error: {err}"
-    except Exception as err:
-        return f"{err}"
+    client, model = _connect_to_client()
+    response = client.chat.completions.create(
+        model=model,
+        temperature=0.2,
+        messages=[
+            {"role": "system", "content": "You are a concise debugging assistant."},
+            {"role": "user", "content": prompt},
+        ],
+    )
     
     text = (response.choices[0].message.content or "").strip()
     if not text:
-        return "LLM returned an empty response."
+        raise RuntimeError("LLM returned an empty response.")
     return text
