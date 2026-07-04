@@ -44,15 +44,25 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 def _analyze(log_file: Path, output_dir: Path, no_llm: bool, format: str) -> int:
-    if not output_dir.exists():
+    try:
         output_dir.mkdir(parents=True, exist_ok=True)
+    except OSError as err:
+        print(f"Error creating output directory: {err}")
+        return 1
 
     if not output_dir.is_dir():
-        print(f"Error: output dir could be found: {output_dir}")
+        print(f"Error: output dir could not be found: {output_dir}")
         return 1
 
     print(f"Loading log file: {log_file}")
-    log_text = log_file.read_text()
+    try:
+        log_text = log_file.read_text(encoding="utf-8")
+    except OSError as err:
+        print(f"Error reading log file: {err}")
+        return 1
+    except UnicodeDecodeError as err:
+        print(f"Error decoding log file as UTF-8: {err}")
+        return 1
 
     print("Parsing log...")
     parsed = parse_log(log_text)
@@ -65,20 +75,25 @@ def _analyze(log_file: Path, output_dir: Path, no_llm: bool, format: str) -> int
         print(summary)
     else:
         print("Generating summary...")
-        template = Template(
-            load_prompt_template("debug_summary.txt")
-        )
-        prompt = template.substitute(
-            issue=issue,
-            errors="\n".join(parsed.errors),
-        )
-
+        try:
+            template = Template(load_prompt_template("debug_summary.txt"))
+            prompt = template.substitute(
+                issue=issue,
+                errors="\n".join(parsed.errors),
+            )
+        except FileNotFoundError as err:
+            print(f"Prompt template not found: {err}")
+            return 1
+        except KeyError as err:
+            print(f"Invalid prompt template: missing variable {err}")
+            return 1
+        
         try:
             summary = generate_summary(prompt)
         except ValueError as err:
             print(f"Configuration error: {err}")
             return 1
-        except OpenAIError as err:
+        except (OpenAIError, RuntimeError) as err:
             print(f"LLM error: {err}")
             return 1
 
@@ -93,10 +108,14 @@ def _analyze(log_file: Path, output_dir: Path, no_llm: bool, format: str) -> int
     print("Writing report...")
     md_path = None
     json_path = None
-    if format in ("markdown", "both"):
-        md_path = write_md_report(result, output_dir)
-    if format in ("json", "both"):
-        json_path = write_json_report(result, output_dir)
+    try:
+        if format in ("markdown", "both"):
+            md_path = write_md_report(result, output_dir)
+        if format in ("json", "both"):
+            json_path = write_json_report(result, output_dir)
+    except OSError as err:
+        print(f"Error writing report: {err}")
+        return 1
 
     print("Analysis complete")
     if md_path is not None:
