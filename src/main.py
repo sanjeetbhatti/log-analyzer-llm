@@ -9,7 +9,9 @@ from openai import OpenAIError
 
 from classifier import classify_issue
 from llm import generate_summary, health_check
+from models import AnalysisResult
 from parser import parse_log
+from report import write_report
 
 
 PROMPT_DIR = Path("prompts")
@@ -78,16 +80,16 @@ def _analyze(log_file: Path, output_dir: Path, no_llm: bool) -> int:
             print(f"LLM error: {err}")
             return 1
 
-    result = {
-        'log_path': str(log_file.stem),
-        'issue_type': issue,
-        'parsed_log': asdict(parsed),
-        'summary': summary
-    }
+    result = AnalysisResult(
+        log_file=log_file,
+        parsed=parsed,
+        issue=issue,
+        summary=summary,
+        suggested_actions=[],
+    )
 
     print("Writing report...")
-    report_path = output_dir / f"{result['log_path']}_report.json"
-    report_path.write_text(json.dumps(result, indent=2))
+    write_report(result=result, output_dir=output_dir)
 
     print("Analysis complete")
     return 0
