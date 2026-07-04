@@ -13,6 +13,7 @@ def test_parsed_log_counts_errors():
     assert parsed.num_warnings == 0
     assert parsed.total_issues == 2
 
+
 def test_parsed_log_counts_warnings():
     parsed = ParsedLog(
         errors=[],
