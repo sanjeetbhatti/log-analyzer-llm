@@ -11,7 +11,7 @@ from classifier import classify_issue
 from llm import generate_summary, health_check
 from models import AnalysisResult
 from parser import parse_log
-from report import write_report
+from report import write_md_report, write_json_report
 
 
 PROMPT_DIR = Path("prompts")
@@ -34,10 +34,16 @@ def _parse_args() -> argparse.Namespace:
     analyze.add_argument("log_file", type=Path, help="Path to log file")
     analyze.add_argument("--output_dir", type=Path, default=Path("reports"), help="Report output dirctory")
     analyze.add_argument("--no-llm", action="store_true", help="Skip LLM summary generation")
+    analyze.add_argument(
+        "--format",
+        choices=["markdown", "json", "both"],
+        default="both",
+        help="Report format to generate",
+    )
 
     return parser.parse_args()
 
-def _analyze(log_file: Path, output_dir: Path, no_llm: bool) -> int:
+def _analyze(log_file: Path, output_dir: Path, no_llm: bool, format: str) -> int:
     if not log_file.exists() or not log_file.is_file():
         print(f"Error: log file not found: {log_file}")
         return 1
@@ -89,9 +95,18 @@ def _analyze(log_file: Path, output_dir: Path, no_llm: bool) -> int:
     )
 
     print("Writing report...")
-    write_report(result=result, output_dir=output_dir)
+    md_path = None
+    json_path = None
+    if format in ("markdown", "both"):
+        md_path = write_md_report(result, output_dir)
+    if format in ("json", "both"):
+        json_path = write_json_report(result, output_dir)
 
     print("Analysis complete")
+    if md_path is not None:
+            print(f"Markdown report: {md_path}")
+    if json_path is not None:
+        print(f"JSON report: {json_path}")
     return 0
 
 def main() -> int:
@@ -104,7 +119,7 @@ def main() -> int:
             return 1
 
     if args.command == "analyze":
-        return _analyze(args.log_file, args.output_dir, args.no_llm)
+        return _analyze(args.log_file, args.output_dir, args.no_llm, args.format)
 
     return 0
         

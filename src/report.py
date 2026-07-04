@@ -5,7 +5,7 @@ from pathlib import Path
 from models import AnalysisResult
 
 
-def write_report(result: AnalysisResult, output_dir: Path) -> Path:
+def write_json_report(result: AnalysisResult, output_dir: Path) -> Path:
     report_path = output_dir / f"{result.log_file.stem}_report.json"
 
     payload = {
@@ -18,4 +18,30 @@ def write_report(result: AnalysisResult, output_dir: Path) -> Path:
     }
     
     report_path.write_text(json.dumps(payload, indent=2))
+    return report_path
+
+def write_md_report(result: AnalysisResult, output_dir: Path) -> Path:
+    report_path = output_dir / f"{result.log_file.stem}_report.md"
+
+    parsed_errors = "\n".join(f"- {line}" for line in result.parsed.errors[:10]) or "- None"
+    actions = result.suggested_actions
+    action_text = "\n".join(f"- {item}" for item in actions)
+
+    content = (
+        "# Analysis Report\n\n"
+        "## File\n"
+        f"{result.log_file}\n\n"
+        "## Statistics\n"
+        f"- Errors: {result.parsed.num_errors}\n"
+        "## Classification\n"
+        f"{result.issue}\n\n"
+        "## AI Summary\n"
+        f"{result.summary}\n\n"
+        "## Parsed Errors\n"
+        f"{parsed_errors}\n\n"
+        "## Suggested Actions\n"
+        f"{action_text}\n"
+    )
+
+    report_path.write_text(content, encoding="utf-8")
     return report_path
