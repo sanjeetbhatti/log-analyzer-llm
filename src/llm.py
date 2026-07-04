@@ -19,6 +19,7 @@ def _connect_to_client():
     base_url = os.getenv("LLM_BASE_URL", "").strip()
     api_key = os.getenv("LLM_API_KEY", "").strip()
     model = os.getenv("LLM_MODEL", "").strip()
+    timeout = float(os.getenv("LLM_REQUEST_TIMEOUT", "30.0").strip())
 
     if not base_url:
         raise ValueError("LLM_BASE_URL is missing")
@@ -27,7 +28,7 @@ def _connect_to_client():
     if not model:
         raise ValueError("LLM_MODEL is missing")
 
-    return OpenAI(base_url=base_url, api_key=api_key), model
+    return OpenAI(base_url=base_url, api_key=api_key, timeout=timeout), model
 
 
 def health_check() -> HealthStatus:

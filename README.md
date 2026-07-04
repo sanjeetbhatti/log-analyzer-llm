@@ -18,6 +18,7 @@ Python cli app that uses llm to analyze logs and write reports.
     LLM_BASE_URL=
     LLM_API_KEY=
     LLM_MODEL=
+    LLM_TIMEOUT=
     ```
 4. Run the app
     ```

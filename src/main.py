@@ -15,6 +15,7 @@ from report import write_md_report, write_json_report
 
 
 PROMPT_DIR = Path(__file__).parent.parent / "prompts"
+MAX_LOG_SIZE = 5 * 1024 * 1024 # ~ 5 MB limit
 
 
 def load_prompt_template(name: str) -> str:
@@ -124,12 +125,27 @@ def _analyze(log_file: Path, output_dir: Path, no_llm: bool, format: str) -> int
         print(f"JSON report: {json_path}")
     return 0
 
+def _validate_log_file(log_file: Path) -> bool:
+    if not log_file.exists() or not log_file.is_file():
+        print(f"Error: log file not found: {log_file}")
+        return False
+
+    log_size = log_file.stat().st_size
+
+    if log_size > MAX_LOG_SIZE:
+        print(
+            f"Error: log file is too large ({log_size / (1024 * 1024):.1f} MB). "
+            f"Maximum size is {MAX_LOG_SIZE / (1024 * 1024):.0f} MB."
+        )
+        return False
+
+    return True
+
 def main() -> int:
     args = _parse_args()
 
     if args.command == "analyze":
-        if not args.log_file.exists() or not args.log_file.is_file():
-            print(f"Error: log file not found: {args.log_file}")
+        if not _validate_log_file(args.log_file):
             return 1
         
         if not args.no_llm:
