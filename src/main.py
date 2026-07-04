@@ -1,6 +1,8 @@
 import argparse
+import logging
 import sys
 
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from string import Template
 
@@ -16,6 +18,25 @@ from report import write_md_report, write_json_report
 PROMPT_DIR = Path(__file__).parent.parent / "prompts"
 MAX_LOG_SIZE = 5 * 1024 * 1024 # ~ 5 MB limit
 
+logger = logging.getLogger(__name__)
+
+def _setup_logging(output_dir: Path) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    log_file = output_dir / "analysis.log"
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        handlers=[
+            logging.StreamHandler(),
+            RotatingFileHandler(
+                log_file,
+                maxBytes=MAX_LOG_SIZE,
+                backupCount=3,
+            )
+        ],
+        force=True
+    )
 
 def load_prompt_template(name: str) -> str:
     path = PROMPT_DIR / name
@@ -56,34 +77,35 @@ def _analyze(log_file: Path, output_dir: Path, no_llm: bool, format: str) -> int
     try:
         output_dir.mkdir(parents=True, exist_ok=True)
     except OSError as err:
-        print(f"Error creating output directory: {err}")
+        logger.exception("Error creating output directory: %s", err)
         return 1
 
     if not output_dir.is_dir():
-        print(f"Error: output dir could not be found: {output_dir}")
+        logger.error("Error: output dir could not be found: %s", output_dir)
         return 1
 
-    print(f"Loading log file: {log_file}")
+    logger.info("[1/5] Loading log file: %s", log_file)
     try:
         log_text = log_file.read_text(encoding="utf-8")
     except OSError as err:
-        print(f"Error reading log file: {err}")
+        logger.exception("Error reading log file: %s", err)
         return 1
     except UnicodeDecodeError as err:
-        print(f"Error decoding log file as UTF-8: {err}")
+        logger.exception("Error decoding log file as UTF-8: %s", err)
         return 1
 
-    print("Parsing log...")
+    logger.info("[2/5] Parsing log...")
     parsed = parse_log(log_text)
 
-    print("Classifying issue...")
+    logger.info("[3/5] Classifying issue...")
     issue = classify_issue(parsed)
 
     if no_llm:
+        logger.info("[4/5] Generating summary - skipped")
         summary = "LLM disabled. Review parsed output and classification."
-        print(summary)
+        logger.warning(summary)
     else:
-        print("Generating summary...")
+        logger.info("[4/5] Generating summary...")
         try:
             template = Template(load_prompt_template("debug_summary.txt"))
             prompt = template.substitute(
@@ -91,19 +113,19 @@ def _analyze(log_file: Path, output_dir: Path, no_llm: bool, format: str) -> int
                 errors="\n".join(parsed.errors),
             )
         except FileNotFoundError as err:
-            print(f"Prompt template not found: {err}")
+            logger.exception("Prompt template not found: %s", err)
             return 1
         except KeyError as err:
-            print(f"Invalid prompt template: missing variable {err}")
+            logger.exception("Invalid prompt template: missing variable %s", err)
             return 1
         
         try:
             summary = generate_summary(prompt)
         except ValueError as err:
-            print(f"Configuration error: {err}")
+            logger.exception("Configuration error: %s", err)
             return 1
         except (OpenAIError, RuntimeError) as err:
-            print(f"LLM error: {err}")
+            logger.exception("LLM error: %s", err)
             return 1
 
     result = AnalysisResult(
@@ -114,7 +136,7 @@ def _analyze(log_file: Path, output_dir: Path, no_llm: bool, format: str) -> int
         suggested_actions=[],
     )
 
-    print("Writing report...")
+    logger.info("[5/5] Writing report...")
     md_path = None
     json_path = None
     try:
@@ -123,27 +145,28 @@ def _analyze(log_file: Path, output_dir: Path, no_llm: bool, format: str) -> int
         if format in ("json", "both"):
             json_path = write_json_report(result, output_dir)
     except OSError as err:
-        print(f"Error writing report: {err}")
+        logger.exception("Error writing report: %s", err)
         return 1
 
-    print("Analysis complete")
+    logger.info("Analysis complete")
     if md_path is not None:
-        print(f"Markdown report: {md_path}")
+        logger.info("Markdown report: %s", md_path)
     if json_path is not None:
-        print(f"JSON report: {json_path}")
+        logger.info("JSON report: %s", json_path)
     return 0
 
 def _validate_log_file(log_file: Path) -> bool:
     if not log_file.exists() or not log_file.is_file():
-        print(f"Error: log file not found: {log_file}")
+        logger.error("Error: log file not found: %s", log_file)
         return False
 
     log_size = log_file.stat().st_size
 
     if log_size > MAX_LOG_SIZE:
-        print(
-            f"Error: log file is too large ({log_size / (1024 * 1024):.1f} MB). "
-            f"Maximum size is {MAX_LOG_SIZE / (1024 * 1024):.0f} MB."
+        logger.error(
+            "Error: log file is too large (%.1f MB). Maximum size is %.0f MB.",
+            log_size / (1024 * 1024),
+            MAX_LOG_SIZE / (1024 * 1024)
         )
         return False
 
@@ -153,6 +176,9 @@ def main() -> int:
     args = _parse_args()
 
     if args.command == "analyze":
+        # make sure analysis log file is properly set
+        _setup_logging(args.output_dir)
+
         if not _validate_log_file(args.log_file):
             return 1
         
@@ -160,8 +186,8 @@ def main() -> int:
             health = health_check()
             
             if not health["healthy"]:
-                print(health["message"])
-                print(
+                logger.error(health["message"])
+                logger.error(
                     "LLM is required for summary generation. "
                     "Fix the LLM configuration/connection, or "
                     "rerun with --no-llm to skip summary generation."
