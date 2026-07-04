@@ -21,6 +21,9 @@ MAX_LOG_SIZE = 5 * 1024 * 1024 # ~ 5 MB limit
 logger = logging.getLogger(__name__)
 
 def _setup_logging(output_dir: Path) -> None:
+    """
+    Configure logging to write to stdout as well as rotating file.
+    """
     output_dir.mkdir(parents=True, exist_ok=True)
     log_file = output_dir / "analysis.log"
 
@@ -39,6 +42,9 @@ def _setup_logging(output_dir: Path) -> None:
     )
 
 def load_prompt_template(name: str) -> str:
+    """
+    Load pre-written prompt template file.
+    """
     path = PROMPT_DIR / name
 
     if not path.exists():
@@ -48,6 +54,9 @@ def load_prompt_template(name: str) -> str:
 
 
 def _parse_args() -> argparse.Namespace:
+    """
+    Parse all command line arguments.
+    """
     parser = argparse.ArgumentParser(description="Log analysis assistant")
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -74,6 +83,14 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 def _analyze(log_file: Path, output_dir: Path, no_llm: bool, format: str) -> int:
+    """
+    Run analysis pipeline.
+    - Load input log file
+    - Parse log file to get ParsedLog structured format
+    - Classify the issue detected
+    - Generate LLM summary (enabled by default)
+    - Write to summary files (default: both json and markdown formats)
+    """
     try:
         output_dir.mkdir(parents=True, exist_ok=True)
     except OSError as err:
@@ -156,6 +173,9 @@ def _analyze(log_file: Path, output_dir: Path, no_llm: bool, format: str) -> int
     return 0
 
 def _validate_log_file(log_file: Path) -> bool:
+    """
+    Validate that the target input log file exists and is within set size limits.
+    """
     if not log_file.exists() or not log_file.is_file():
         logger.error("Error: log file not found: %s", log_file)
         return False

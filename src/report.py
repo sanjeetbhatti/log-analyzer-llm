@@ -6,6 +6,9 @@ from models import AnalysisResult
 
 
 def write_json_report(result: AnalysisResult, output_dir: Path) -> Path:
+    """
+    Generate and write a JSON format analysis report.
+    """
     report_path = output_dir / f"{result.log_file.stem}_report.json"
 
     payload = {
@@ -21,6 +24,9 @@ def write_json_report(result: AnalysisResult, output_dir: Path) -> Path:
     return report_path
 
 def write_md_report(result: AnalysisResult, output_dir: Path) -> Path:
+    """
+    Generate and write a Markdown format analysis report.
+    """
     report_path = output_dir / f"{result.log_file.stem}_report.md"
 
     parsed_errors = "\n".join(f"- {line}" for line in result.parsed.errors[:10])

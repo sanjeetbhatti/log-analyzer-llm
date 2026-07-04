@@ -10,12 +10,18 @@ load_dotenv()
 
 
 class HealthStatus(TypedDict):
+    """
+    Represents the operational health status of the LLM connection.
+    """
     healthy: bool
     message: str
 
 
 @lru_cache(maxsize=1)
 def _connect_to_client():
+    """
+    Initialize and cache OpenAI client and target model via env variables.
+    """
     base_url = os.getenv("LLM_BASE_URL", "").strip()
     api_key = os.getenv("LLM_API_KEY", "").strip()
     model = os.getenv("LLM_MODEL", "").strip()
@@ -32,6 +38,9 @@ def _connect_to_client():
 
 
 def health_check() -> HealthStatus:
+    """
+    Verify if connectivity and configuration is valid.
+    """
     try:
         client, model = _connect_to_client()
         client.chat.completions.create(
@@ -58,6 +67,9 @@ def health_check() -> HealthStatus:
         }
 
 def generate_summary(prompt: str) -> str:
+    """
+    Generate a diagnostic summary using the prompt.
+    """
     client, model = _connect_to_client()
     response = client.chat.completions.create(
         model=model,

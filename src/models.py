@@ -4,6 +4,9 @@ from pathlib import Path
 
 @dataclass
 class ParsedLog:
+    """
+    Represents the parsed structural output extracted from a log file.
+    """
     errors: list[str]
 
     @property
@@ -12,6 +15,9 @@ class ParsedLog:
 
 @dataclass
 class AnalysisResult:
+    """
+    Represents the complete aggregation of log analysis findings and report metadata.
+    """
     log_file: Path
     parsed: ParsedLog
     issue: str

@@ -7,6 +7,9 @@ ERROR_REGEXP = re.compile(r"\b\w*error\w*\b", re.IGNORECASE)
 
 
 def parse_log(log_text: str) -> ParsedLog:
+    """
+    Parse raw log text, extracting non-empty lines that contain error-related terms.
+    """
     parsed_data: list[str] = []
 
     for line in log_text.splitlines():
